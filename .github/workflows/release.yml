@@ -32,12 +32,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        comment_body=$(<.github/release_pr_comment_template.md)
+        comment_json=$( node .github/release_pr_comment.js ${{ runner.os }} )
+        echo "$comment_body"
         curl -X POST \
           ${{ github.event.pull_request._links.comments.href }} \
           -H "authorization: Bearer ${GITHUB_TOKEN}" \
           -H "content-type: application/json" \
-          --data "{\"body\": \"${comment_body}\"}"
+          --data "$comment_json"
 
     - name: Write current date in foo.md
       run: |
