@@ -1,3 +1,3 @@
 ## Testing...
 
-Version blah (<span actions:bind='release-date'>Upcoming, 2020_Q4?</span>)
+Version blah (<span actions:bind='release-date'>2020</span>)
