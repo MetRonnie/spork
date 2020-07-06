@@ -1,0 +1,53 @@
+name: Update something
+
+on:
+  issues:
+    types: [locked]
+
+jobs:
+  update-copyright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2.3.1
+
+    - name: Configure git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        year=$(date '+%Y' --utc)
+        branch_name="copyright-${year}"
+        git checkout -b "$branch_name"
+
+        echo "::set-env name=YEAR::$year"
+        echo "::set-env name=BRANCH_NAME::$branch_name"
+
+    - name: Update copyright year
+      run: |
+        pattern="(<span actions:bind='release-date'>).*(<\/span>)"
+        sed -i -E "s/${pattern}/\1${YEAR}\2/" foo.md
+
+    - name: Commit & push
+      run : |
+        git commit -a -m "Update thingy year" -m "Workflow: ${{ github.workflow }}, run: ${{ github.run_number }}"
+        git push origin "$BRANCH_NAME"
+
+    - name: Create pull request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        data_json=$( node .github/release_pr_comment.js ${{ runner.os }} )
+        echo "$comment_body"
+        curl -X POST \
+          https://api.github.com/repos/${{ github.repository }}/pulls \
+          -H "authorization: Bearer ${GITHUB_TOKEN}" \
+          -H "content-type: application/json" \
+          --data '{
+            "title": "Auto PR: update copyright year",
+            "head": "${{ env.BRANCH_NAME }}",
+            "base": "master",
+            "body": "Happy new year!"
+          }'
+
