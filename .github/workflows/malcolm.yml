@@ -1,0 +1,12 @@
+name: Dr Malcolm
+
+on:
+  push:
+
+jobs:
+  testing:
+    if: contains(github.ref, 'chaos')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - run: echo "Life, uh, finds a way"
