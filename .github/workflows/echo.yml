@@ -1,0 +1,12 @@
+name: Echo something
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  echo-something:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - run: echo "${{ toJson(github.event) }}"
