@@ -2,11 +2,14 @@ name: Echo something
 
 on:
   issues:
-    types: [opened]
+    types: [labeled]
 
 jobs:
   echo-something:
+    if: >-  # Testing multiline if
+      always() &&
+      contains(github.event.issue.labels.*.name, 'trigger-something')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - run: echo "${{ toJson(github.event) }}"
+    - run: echo "Well, it worked"
