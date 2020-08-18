@@ -12,4 +12,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - run: echo "Well, it worked"
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install mailutils
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mailutils
+        mail -s 'Setup mail' runner@localhost <<< 'This email creates the mail directory'
+        sleep 2
+        mail # Check inbox
+
+    - name: Install smtp (Python module)
+      run: python3 -m pip install smtp
+
+    - name: Try the mail thing
+      run: |
+        export smtp='localhost:8025'
+        python3 -u -m smtpd -c DebuggingServer -d -n "$smtp" &> mail_log.txt & SMTP_PID="$!"
+        sleep 5
+        echo "SMTP process: $SMTP_PID"
+        mail -s "Foo mail" runner <<< "Here is the body"
+        sleep 10
+        kill "$SMTP_PID"
+
+    - name: Show the results
+      run: |
+        cat mail_log.txt
+        mail # Check inbox
+
