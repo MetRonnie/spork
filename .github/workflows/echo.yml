@@ -20,10 +20,11 @@ jobs:
     - name: Install mailutils
       run: |
         sudo apt-get update
-        sudo apt-get install -y mailutils
+        sudo apt-get install -y bsd-mailx
         mail -s 'Setup mail' runner@localhost <<< 'This email creates the mail directory'
         sleep 2
         mail # Check inbox
+        which mail
 
     - name: Install smtp (Python module)
       run: python3 -m pip install smtp
