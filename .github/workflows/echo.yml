@@ -1,14 +1,11 @@
 name: Do something
 
 on:
-  issues:
-    types: [labeled]
+  push:
+    branches: [master]
 
 jobs:
   do-something:
-    if: >-  # Testing multiline if
-      always() &&
-      contains(github.event.issue.labels.*.name, 'trigger-something')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -18,21 +15,27 @@ jobs:
       with:
         python-version: '3.x'
 
+    - name: Checkout
+      uses: actions/checkout@v2.3.2
+
     # - name: Install SMTP stuff
     #   run: |
     #     python3 -m pip install smtp
 
     - name: Setup mocked mail
-      run: echo "::add-path::${{ github.workspace }}/.github/bin"
+      working-directory: .github/bin/
+      run: |
+        chmod u+x mail
+        echo "::add-path::${{ github.workspace }}/.github/bin"
 
     - run: echo "$PATH"
 
     - name: Try the mail thing
       run: |
-        python3 -u -m smtpd -c DebuggingServer -d -n "$smtp" &> mail_log.txt & SMTP_PID="$!"
+        python3 -u -m smtpd -c DebuggingServer -d -n "localhost:8025" &> mail_log.txt & SMTP_PID="$!"
         sleep 5
         echo "SMTP process: $SMTP_PID"
-        mail -s 'Jurassic Park ticketing idea' runner <<< 'Maybe we could have a coupon day?'
+        echo 'Maybe we could have a coupon day?' | mail -s 'Jurassic Park ticketing idea' -r 'donald.gennaro@ingen.com' runner
         sleep 10
         kill "$SMTP_PID"
 
