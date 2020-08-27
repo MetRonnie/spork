@@ -1,11 +1,11 @@
-name: Echo something
+name: Do something
 
 on:
   issues:
     types: [labeled]
 
 jobs:
-  echo-something:
+  do-something:
     if: >-  # Testing multiline if
       always() &&
       contains(github.event.issue.labels.*.name, 'trigger-something')
@@ -13,25 +13,28 @@ jobs:
     timeout-minutes: 5
     steps:
 
-    - name: Install mailx
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y bsd-mailx
-        mail -s 'Welcome to bsd-mailx' runner@localhost <<< 'This email creates the mail directory'
-        sleep 2
-        mail # Check inbox
-        which mail
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    # - name: Install SMTP stuff
+    #   run: |
+    #     python3 -m pip install smtp
+
+    - name: Setup mocked mail
+      run: echo "::add-path::${{ github.workspace }}/.github/bin"
+
+    - run: echo "$PATH"
 
     - name: Try the mail thing
       run: |
-        export smtp='localhost:8025'
-        smtp-sink -D 'mail_log.txt' -M 1 "$smtp" 1 & SMTP_PID="$!"
-        sleep 2
-        ps "$SMTP_PID"
-        mail -s 'Jurassic Park ticketing suggestion' runner <<< 'Maybe we could have a coupon day?'
+        python3 -u -m smtpd -c DebuggingServer -d -n "$smtp" &> mail_log.txt & SMTP_PID="$!"
         sleep 5
-        ps "$SMTP_PID"
-        echo "(Note: 'Unexpected EOF on SMTP connection' message is expected)"
+        echo "SMTP process: $SMTP_PID"
+        mail -s 'Jurassic Park ticketing idea' runner <<< 'Maybe we could have a coupon day?'
+        sleep 10
+        kill "$SMTP_PID"
 
     - name: Show the results
       run: |
@@ -40,5 +43,3 @@ jobs:
         else
           echo "mail_log.txt not found"
         fi
-        mail # Check inbox
-
