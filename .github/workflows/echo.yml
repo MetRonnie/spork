@@ -1,8 +1,7 @@
 name: Do something
 
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 jobs:
   do-something:
@@ -18,15 +17,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2.3.2
 
-    # - name: Install SMTP stuff
-    #   run: |
-    #     python3 -m pip install smtp
-
     - name: Setup mocked mail
-      working-directory: .github/bin/
-      run: |
-        chmod u+x mail
-        echo "::add-path::${{ github.workspace }}/.github/bin"
+      run: echo "::add-path::${{ github.workspace }}/.github/bin"
 
     - run: echo "$PATH"
 
